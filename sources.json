@@ -1,0 +1,11 @@
+{
+  "playlists": [
+    "https://iptv-org.github.io/iptv/index.m3u"
+  ],
+  "settings": {
+    "maintenance_after_consecutive_failed_runs": 3,
+    "retry_attempts_per_stream": 2,
+    "request_timeout_seconds": 12,
+    "max_channels": 5000
+  }
+}
