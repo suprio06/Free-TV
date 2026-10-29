@@ -1,31 +1,38 @@
 name: Refresh Suprio TV channels
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 */12 * * *'  # Runs every 12 hours
-  workflow_dispatch:        # Allows manual trigger from Actions tab
+    - cron: "17,47 * * * *"
 
 permissions:
   contents: write
 
+concurrency:
+  group: suprio-tv-refresh
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-
-      - name: Run check_streams script
-        run: python check_streams.py
-
-      - name: Commit and push changes if any
+          python-version: "3.12"
+      - name: Build catalog and check stream health
+        run: python scripts/check_streams.py
+      - name: Commit refreshed data
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/channels.json data/health-state.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-refresh stream health and channels [skip ci]" && git push)
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "Refresh channel catalog and health status"
+            git push
+          fi
